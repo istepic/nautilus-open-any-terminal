@@ -74,7 +74,7 @@ NEW_TAB_PARAMS = {
 }
 
 global terminal
-terminal = "gnome-terminal"
+terminal = "tilix"
 new_tab = False
 GSETTINGS_PATH = "com.github.stunkymonkey.nautilus-open-any-terminal"
 GSETTINGS_KEYBINDINGS = "keybindings"
@@ -83,6 +83,7 @@ GSETTINGS_NEW_TAB = "new-tab"
 REMOTE_URI_SCHEME = ["ftp", "sftp"]
 textdomain("nautilus-open-any-terminal")
 _ = gettext
+check_duplicates = []
 
 
 def _checkdecode(s):
@@ -234,13 +235,15 @@ class OpenAnyTerminalExtension(GObject.GObject, Nautilus.MenuProvider):
             item.connect("activate", self._menu_activate_cb, file_)
             items.append(item)
 
-        item = Nautilus.MenuItem(
-            name="NautilusPython::open_bg_file_item",
-            label=_("Open {} Here").format(terminal.title()),
-            tip=_("Open {} In This Directory").format(terminal.title()),
-        )
-        item.connect("activate", self._menu_background_activate_cb, file_)
-        items.append(item)
+        if terminal.title() not in check_duplicates:
+            check_duplicates.append(terminal.title())
+            item = Nautilus.MenuItem(
+                name="NautilusPython::open_bg_file_item",
+                label=_("Open {} Here").format(terminal.title()),
+                tip=_("Open {} In This Directory").format(terminal.title()),
+            )
+            item.connect("activate", self._menu_background_activate_cb, file_)
+            items.append(item)
         return items
 
 
@@ -250,6 +253,7 @@ if source is not None and source.lookup(GSETTINGS_PATH, True):
     _gsettings.connect("changed", set_terminal_args)
     value = _gsettings.get_string(GSETTINGS_TERMINAL)
     if value in TERM_PARAMS:
-        terminal = value
+        # terminal = value
+        pass
     if _gsettings.get_boolean(GSETTINGS_NEW_TAB):
         new_tab = bool(NEW_TAB_PARAMS[value] is not None)
